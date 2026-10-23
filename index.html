@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#211a14">
+<title>BeanHunt — Кофейни рядом</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#f8f6f1;--ink:#211a14;--brown:#704a32;--orange:#d88a50;--muted:#81796f;--cream:#eee4d7;--white:#fffefa;--border:#e8e1d7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif}
+button,input{font:inherit}button,a{cursor:pointer}a{color:inherit;text-decoration:none}
+.container{width:min(1160px,calc(100% - 36px));margin:auto}
+.topbar{background:var(--ink);color:#e8d7c5;text-align:center;padding:9px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+header{position:sticky;top:0;z-index:1000;background:#f8f6f1f2;backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-size:23px;font-weight:700;letter-spacing:-1px}
+.logo-icon{display:grid;place-items:center;width:39px;height:39px;background:var(--ink);color:#f6d7b6;border-radius:13px}
+.logo-name span{color:var(--brown)}
+.nav-links{display:flex;gap:6px}
+.nav-link{border:0;background:transparent;padding:12px 15px;border-radius:50px;color:#665c51;font-size:13px;font-weight:600}
+.nav-link:hover,.nav-link.active{background:#eae0d3;color:var(--ink)}
+.primary,.dark-button{display:inline-flex;justify-content:center;align-items:center;gap:8px;background:var(--ink);color:white;border:0;border-radius:50px;padding:14px 20px;font-weight:600;transition:.2s}
+.primary:hover,.dark-button:hover{background:var(--brown);transform:translateY(-2px)}
+.outline-button{border:1px solid var(--border);background:transparent;border-radius:50px;padding:13px 18px;font-weight:600}
+.page{display:none;animation:appear .3s ease}.page.active{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.hero{padding:58px 0 70px;background:radial-gradient(ellipse at 75% 25%,#daaa7938,transparent 45%),var(--bg)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+.eyebrow,.kicker{color:var(--brown);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:17px}
+.eyebrow:before{content:"";display:inline-block;width:24px;height:1px;background:var(--orange);vertical-align:middle;margin-right:9px}
+h1,h2{font-family:"Playfair Display",serif;font-weight:500}
+h1{font-size:clamp(43px,5.4vw,72px);line-height:1.06;letter-spacing:-2px;margin:0 0 22px}
+h1 em{color:var(--brown)}
+.hero-copy,.description{color:var(--muted);font-size:14px;line-height:1.8;max-width:510px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.hero-stats{display:flex;gap:30px;margin-top:38px}
+.stat strong{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}
+.hero-image{height:440px;position:relative;border-radius:25px;overflow:hidden;background:#c6b09a;box-shadow:0 14px 45px #271c1114}
+.hero-image img{height:100%;width:100%;object-fit:cover;transition:.5s}.hero-image:hover img{transform:scale(1.04)}
+.image-label{position:absolute;bottom:18px;left:18px;right:18px;background:#fffefaf0;border-radius:15px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.image-label strong{font-size:13px;display:block}.image-label small{font-size:11px;color:var(--muted)}
+.pill{background:#f5e7d5;border-radius:9px;padding:8px;font-size:11px;font-weight:700}
+.section{padding:65px 0}.section-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:28px}
+h2{font-size:clamp(30px,4vw,43px);margin:0 0 10px}.description{margin:0}
+.text-link{font-size:12px;color:var(--brown);font-weight:700;border:0;background:none}
+.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.category-card{height:220px;position:relative;border-radius:17px;overflow:hidden;background:#49372b;color:white}
+.category-card img{width:100%;height:100%;object-fit:cover;transition:.5s}.category-card:hover img{transform:scale(1.07)}
+.category-card:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#160f0bd9,transparent 75%)}
+.category-content{position:absolute;bottom:17px;left:17px;right:12px;z-index:1}
+.category-content h3{font-size:15px;margin:0 0 5px}.category-content p{font-size:11px;color:#eee0d0;margin:0}
+.featured{background:var(--white)}.featured-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}
+.feature-card{background:white;border:1px solid var(--border);border-radius:17px;overflow:hidden;transition:.25s}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px #271c1110}
+.feature-card img{height:185px;object-fit:cover}.feature-info{padding:17px}
+.feature-info h3{font-size:15px;margin:0 0 7px}.feature-info p{font-size:12px;color:var(--muted);line-height:1.7;margin:0}
+.feature-tag{display:inline-block;font-size:10px;background:#f3e8db;color:var(--brown);padding:6px 9px;border-radius:50px;margin-bottom:10px}
+.cta{background:#eae0d3;border-radius:22px;padding:30px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.cta h2{font-size:30px}.cta p{color:var(--muted);font-size:13px;line-height:1.7;margin:0;max-width:500px}
+.search-area{background:var(--white);padding:48px 0 65px}
+.search-panel{background:#f5f0e8;padding:19px;border-radius:17px;margin:26px 0 14px}
+.search-row{display:flex;gap:10px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:180px;padding:15px;border:1px solid #e3d9cb;border-radius:12px;background:white;outline:none}
+.search-row input:focus{border-color:var(--orange)}
+.search-row button{border:0;border-radius:12px;background:var(--ink);color:white;padding:14px 19px;font-weight:600}
+.search-row button:disabled{opacity:.55;cursor:wait}
+.hints{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hint{background:white;border:1px solid var(--border);border-radius:50px;padding:8px 12px;font-size:11px;color:#665b4e}
+.status{min-height:24px;font-size:12px;line-height:1.7;color:var(--muted);margin:15px 0}
+.explorer{display:grid;grid-template-columns:.85fr 1.15fr;gap:19px;align-items:start}
+.results-heading{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:700;margin:0 0 13px}
+.results-count{font-size:11px;color:var(--muted);font-weight:500}
+.results-list{display:grid;gap:10px;max-height:580px;overflow:auto;padding-right:4px}
+.place-card{display:grid;grid-template-columns:85px minmax(0,1fr);gap:12px;background:white;border:1px solid var(--border);padding:9px;border-radius:14px;cursor:pointer;transition:.2s}
+.place-card:hover,.place-card.active{border-color:#c79a70;box-shadow:0 7px 24px #271c110c}
+.place-photo{width:85px;height:103px;border-radius:9px;overflow:hidden;background:#e8d8c6}
+.place-photo img{height:100%;width:100%;object-fit:cover}
+.place-info{min-width:0;padding:3px 0}.place-info h3{font-size:13px;line-height:1.45;margin:0 0 5px;overflow-wrap:anywhere}
+.place-address{font-size:10px;color:var(--muted);line-height:1.5;margin:0 0 7px}
+.place-meta{font-size:10px;color:var(--brown);line-height:1.6}.place-link{display:inline-block;font-size:10px;font-weight:700;color:var(--brown);margin-top:7px}
+.map-wrap{position:sticky;top:95px;border:1px solid var(--border);border-radius:17px;overflow:hidden;background:#e7e0d5}
+#map{width:100%;height:580px;background:#e9e4da}
+.map-caption{background:white;padding:12px 14px;font-size:11px;line-height:1.6;color:var(--muted)}
+.empty{background:white;border:1px dashed #d9cbbb;border-radius:14px;padding:24px 18px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+.empty strong{font-size:14px;color:var(--ink)}
+.fallback-links{display:grid;gap:8px;margin-top:15px}
+.fallback-link{display:block;background:#f5f0e8;border-radius:10px;padding:12px;color:var(--brown);font-weight:700}
+.fallback-link:hover{background:#eae0d3}
+.guide-hero{background:#211a14;color:#fff8ef;padding:65px 0}
+.guide-hero .kicker{color:#d8a477}.guide-hero .description{color:#c4b6a7}
+.guide-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-top:28px}
+.guide-card{border:1px solid #ffffff20;border-radius:16px;padding:25px;background:#ffffff08;transition:.2s}
+.guide-card:hover{background:#ffffff12;transform:translateY(-3px)}
+.guide-number{font-family:"Playfair Display",serif;font-size:32px;color:#d8a477;margin-bottom:15px}
+.guide-card h3{font-size:16px;margin:0 0 10px}.guide-card p{font-size:12px;line-height:1.8;color:#c4b6a7;margin:0}
+.coffee-types{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.coffee-type{display:flex;gap:15px;padding:21px;border-radius:15px;background:white;border:1px solid var(--border)}
+.coffee-icon{font-size:27px}.coffee-type h3{font-size:15px;margin:0 0 6px}
+.coffee-type p{font-size:12px;line-height:1.7;color:var(--muted);margin:0}
+footer{background:#211a14;color:#eee0d0;padding:32px 0;margin-top:45px}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.footer-copy{font-size:11px;line-height:1.8;color:#bcae9e;margin-top:10px}
+.footer-links{display:flex;gap:18px;flex-wrap:wrap;font-size:11px;color:#d8c6b4}
+@media(max-width:850px){.hero-grid{grid-template-columns:1fr;gap:30px}.hero-image{height:360px}.categories{grid-template-columns:repeat(2,1fr)}.explorer{grid-template-columns:1fr}.map-wrap{position:relative;top:auto;grid-row:1}#map{height:380px}.results-list{max-height:none}.featured-grid{grid-template-columns:repeat(2,1fr)}.featured-grid .feature-card:last-child{display:none}}
+@media(max-width:560px){.container{width:calc(100% - 28px)}.nav{padding:10px 0}.logo{font-size:20px}.logo-icon{width:34px;height:34px}.nav-links{width:100%;justify-content:space-between;gap:2px}.nav-link{font-size:11px;padding:10px 7px;flex:1}.hero{padding:40px 0}.hero-image{height:300px}h1{letter-spacing:-1.2px}.hero-stats{gap:20px}.section{padding:48px 0}.section-heading{align-items:start;flex-direction:column}.categories{gap:10px}.category-card{height:165px}.featured-grid{grid-template-columns:1fr}.featured-grid .feature-card:last-child{display:block}.feature-card img{height:190px}.search-area{padding:38px 0 48px}.search-panel{padding:12px}.search-row{flex-direction:column}.search-row input{width:100%}.search-row button{width:100%}.place-card{grid-template-columns:78px minmax(0,1fr)}.place-photo{width:78px;height:96px}.guide-cards,.coffee-types{grid-template-columns:1fr}.cta{align-items:start;flex-direction:column;padding:24px}.footer-inner{align-items:start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="topbar">A little coffee, a lot of discovery · Открывай новые места</div>
+<header><div class="container nav">
+<a href="#overview" class="logo" data-go="overview"><span class="logo-icon">☕</span><span class="logo-name">Bean<span>Hunt</span></span></a>
+<nav class="nav-links">
+<button class="nav-link active" data-page="overview">Обзор</button>
+<button class="nav-link" data-page="nearby">Рядом со мной</button>
+<button class="nav-link" data-page="guide">Гид по кофе</button>
+</nav></div></header>
+
+<main>
+<section class="page active" id="page-overview">
+<div class="hero"><div class="container hero-grid"><div>
+<div class="eyebrow">Твой гид по кофейной культуре</div>
+<h1>Твой следующий<br>любимый кофе<br><em>уже рядом.</em></h1>
+<p class="hero-copy">Маленькие кофейни, ароматный капучино и места, в которые хочется возвращаться. Открывай новые кофейные истории вместе с BeanHunt.</p>
+<div class="hero-actions"><button class="primary" data-go="nearby">Найти кофейню ↗</button><button class="outline-button" data-go="guide">Исследовать кофе</button></div>
+<div class="hero-stats"><div class="stat"><strong>01</strong><span>Выбери город</span></div><div class="stat"><strong>02</strong><span>Найди место</span></div><div class="stat"><strong>03</strong><span>Наслаждайся</span></div></div>
+</div><div class="hero-image"><img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1200&q=85" alt="Кофе"><div class="image-label"><div><strong>Маленькие моменты. Большой кофе.</strong><small>Твой повод выйти из дома</small></div><div class="pill">☕ BeanHunt</div></div></div></div></div>
+<section class="section"><div class="container"><div class="section-heading"><div><div class="kicker">Find your mood</div><h2>Выбери настроение</h2><p class="description">Какой кофе подходит тебе сегодня?</p></div><button class="text-link" data-go="guide">Открыть гид ↗</button></div>
+<div class="categories">
+<a class="category-card" href="#nearby" data-go="nearby"><img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=650&q=80" alt="Латте"><div class="category-content"><h3>Уютный латте</h3><p>Для спокойного утра</p></div></a>
+<a class="category-card" href="#nearby" data-go="nearby"><img src="https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?auto=format&fit=crop&w=650&q=80" alt="Эспрессо"><div class="category-content"><h3>Крепкий эспрессо</h3><p>Ничего лишнего</p></div></a>
+<a class="category-card" href="#nearby" data-go="nearby"><img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=650&q=80" alt="Айс-кофе"><div class="category-content"><h3>Айс-кофе</h3><p>Свежесть в каждом глотке</p></div></a>
+<a class="category-card" href="#nearby" data-go="nearby"><img src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=650&q=80" alt="Кофейня"><div class="category-content"><h3>Скрытые места</h3><p>Для новых открытий</p></div></a>
+</div></div></section>
+<section class="section featured"><div class="container"><div class="section-heading"><div><div class="kicker">Coffee inspiration</div><h2>Кофейное вдохновение</h2><p class="description">Идеи для следующего кофейного приключения.</p></div><button class="text-link" data-go="nearby">Искать реальные места ↗</button></div>
+<div class="featured-grid">
+<article class="feature-card"><img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=700&q=80" alt="Кофейня"><div class="feature-info"><span class="feature-tag">Атмосфера</span><h3>Место для перезагрузки</h3><p>Найди уютный уголок, где можно отдохнуть от суеты.</p></div></article>
+<article class="feature-card"><img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=700&q=80" alt="Кофе"><div class="feature-info"><span class="feature-tag">Новый вкус</span><h3>Попробуй что-то новое</h3><p>Открой для себя другой способ приготовления кофе.</p></div></article>
+<article class="feature-card"><img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=700&q=80" alt="Интерьер"><div class="feature-info"><span class="feature-tag">Исследуй</span><h3>Твоя следующая находка</h3><p>Выбери город и посмотри кофейни на карте.</p></div></article>
+</div></div></section>
+<section class="section"><div class="container"><div class="cta"><div><div class="kicker">Your next coffee story</div><h2>Мир лучше с кофе.</h2><p>Выбери город, посмотри карту и найди место для следующей встречи с любимым напитком.</p></div><button class="primary" data-go="nearby">Открыть карту ↗</button></div></div></section>
+</section>
+
+<section class="page" id="page-nearby"><div class="search-area"><div class="container">
+<div class="kicker">Coffee radar</div><h2>Кофейни рядом с тобой</h2>
+<p class="description">Введи город или используй свою геолокацию. При сбое поиска можно перейти к другим картам.</p>
+<div class="search-panel">
+<form class="search-row" id="searchForm"><input id="cityInput" type="search" placeholder="Например, Ялта, Москва, Сочи..." autocomplete="off" required aria-label="Название города"><button type="submit" id="citySearch">Найти кофейни ↗</button><button type="button" id="locationSearch">⌖ Моя локация</button></form>
+<div class="hints"><button class="hint" data-city="Ялта">Ялта</button><button class="hint" data-city="Москва">Москва</button><button class="hint" data-city="Санкт-Петербург">Санкт-Петербург</button><button class="hint" data-city="Сочи">Сочи</button></div>
+</div>
+<p class="status" id="searchStatus" role="status" aria-live="polite">Введи город, чтобы начать поиск.</p>
+<div class="explorer"><div><div class="results-heading"><span>Найденные места</span><span class="results-count" id="resultsCount">0 мест</span></div><div class="results-list" id="nearbyResults"><div class="empty"><strong>Карта готова к поиску.</strong><br>Введи город или нажми «Моя локация».</div></div></div>
+<div class="map-wrap"><div id="map"></div><div class="map-caption">Нажми на карточку или маркер, чтобы показать место на карте. Данные карты — OpenStreetMap.</div></div></div>
+</div></div></section>
+
+<section class="page" id="page-guide">
+<div class="guide-hero"><div class="container"><div class="kicker">The coffee guide</div><h2>Кофе — это целый мир.</h2><p class="description">Разбираемся во вкусах, способах приготовления и кофейной культуре без сложных слов.</p>
+<div class="guide-cards"><article class="guide-card"><div class="guide-number">01</div><h3>Попробуй новое</h3><p>Обычно берёшь капучино? Попробуй флэт-уайт или фильтр-кофе.</p></article><article class="guide-card"><div class="guide-number">02</div><h3>Узнай свои зёрна</h3><p>В кофе встречаются ноты шоколада, карамели, ягод и цитрусовых.</p></article><article class="guide-card"><div class="guide-number">03</div><h3>Найди атмосферу</h3><p>Хорошая кофейня — это напиток, музыка, интерьер и настроение.</p></article></div></div></div>
+<section class="section"><div class="container"><div class="section-heading"><div><div class="kicker">Coffee menu</div><h2>Популярные напитки</h2><p class="description">Короткая шпаргалка, чтобы легче выбрать свой кофе.</p></div></div>
+<div class="coffee-types">
+<article class="coffee-type"><div class="coffee-icon">☕</div><div><h3>Эспрессо</h3><p>Небольшая порция насыщенного кофе. Основа многих кофейных напитков.</p></div></article>
+<article class="coffee-type"><div class="coffee-icon">🥛</div><div><h3>Капучино</h3><p>Эспрессо с горячим молоком и мягкой молочной пеной.</p></div></article>
+<article class="coffee-type"><div class="coffee-icon">🤎</div><div><h3>Латте</h3><p>Молочный напиток с эспрессо и тонким слоем пены.</p></div></article>
+<article class="coffee-type"><div class="coffee-icon">🧊</div><div><h3>Айс-кофе</h3><p>Холодный кофейный напиток для тёплой погоды.</p></div></article>
+<article class="coffee-type"><div class="coffee-icon">🌿</div><div><h3>Фильтр-кофе</h3><p>Позволяет лучше почувствовать оттенки вкуса зёрен.</p></div></article>
+<article class="coffee-type"><div class="coffee-icon">✨</div><div><h3>Флэт-уайт</h3><p>Кофе с молоком и выраженным вкусом эспрессо.</p></div></article>
+</div></div></section>
+<section class="section" style="padding-top:0"><div class="container"><div class="cta"><div><div class="kicker">Ready to explore?</div><h2>Пора искать кофейню.</h2><p>Открой карту и найди место, где захочется попробовать что-то новое.</p></div><button class="primary" data-go="nearby">Найти кофейню ↗</button></div></div></section>
+</section>
+</main>
+
+<footer><div class="container footer-inner"><div><a href="#overview" class="logo" data-go="overview"><span class="logo-icon">☕</span><span class="logo-name">Bean<span>Hunt</span></span></a><div class="footer-copy">Ищи места. Находи вкус. Создавай моменты.<br>© <span id="year"></span> BeanHunt</div></div><div class="footer-links"><a href="#overview" data-go="overview">Обзор</a><a href="#nearby" data-go="nearby">Кофейни рядом</a><a href="#guide" data-go="guide">Гид по кофе</a></div></div></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+$("#year").textContent=new Date().getFullYear();
+
+let map=null,markersLayer=null,currentPlaces=[],activeSearch=0,searchStarted=false;
+const cityCoordinates={
+ "ялта":{lat:44.4952,lon:34.1663},
+ "москва":{lat:55.7558,lon:37.6173},
+ "санкт-петербург":{lat:59.9343,lon:30.3351},
+ "спб":{lat:59.9343,lon:30.3351},
+ "сочи":{lat:43.5855,lon:39.7231},
+ "симферополь":{lat:44.9521,lon:34.1024},
+ "севастополь":{lat:44.6167,lon:33.5254},
+ "краснодар":{lat:45.0355,lon:38.9753},
+ "амстердам":{lat:52.3676,lon:4.9041}
+};
+
+function showPage(name){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+name));
+ document.querySelectorAll(".nav-link").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+ window.scrollTo({top:0,behavior:"smooth"});
+ if(name==="nearby"){
+  setTimeout(()=>{
+   initMap();
+   if(map)map.invalidateSize();
+   if(!searchStarted){searchStarted=true;searchCity("Ялта");}
+  },150);
+ }
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();showPage(b.dataset.go);}));
+window.addEventListener("hashchange",()=>{
+ const name=location.hash.replace("#","");
+ if(["overview","nearby","guide"].includes(name))showPage(name);
+});
+
+function initMap(lat=44.4952,lon=34.1663,zoom=12){
+ if(!window.L){$("#map").innerHTML='<div class="empty">Не удалось загрузить библиотеку карты. Список мест всё ещё может работать.</div>';return;}
+ if(map){setTimeout(()=>map.invalidateSize(),60);return;}
+ map=L.map("map").setView([lat,lon],zoom);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+ }).addTo(map);
+ markersLayer=L.layerGroup().addTo(map);
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function cafeName(p){return p.tags.name||p.tags.brand||p.tags.operator||"Кофейня без названия";}
+function cafeType(p){if(p.tags.shop==="coffee_roaster")return "Обжарка кофе";if(p.tags.amenity==="cafe")return "Кофейня";return "Кофе и напитки";}
+function address(p){
+ const t=p.tags||{};
+ const a=[t["addr:street"],t["addr:housenumber"],t["addr:suburb"],t["addr:city"]].filter(Boolean);
+ return a.length?a.join(", "):(t["addr:full"]||"Адрес уточняйте на карте");
+}
+function photoFor(i){
+ const ids=["photo-1501339847302-ac426a4a7cbb","photo-1445116572660-236099ec97a0","photo-1495474472287-4d71bcdd2085","photo-1554118811-1e0d58224f24","photo-1559925393-8be0ec4767c8","photo-1509042239860-f550ce710b93"];
+ return `https://images.unsplash.com/${ids[i%ids.length]}?auto=format&fit=crop&w=300&q=75`;
+}
+function distanceKm(a,b,c,d){
+ const r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b);
+ const z=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;
+ return 6371*2*Math.atan2(Math.sqrt(z),Math.sqrt(1-z));
+}
+function plural(n){
+ if(n%100>=11&&n%100<=14)return "мест";
+ if(n%10===1)return "место";
+ if([2,3,4].includes(n%10))return "места";
+ return "мест";
+}
+function timedFetch(url,options={},ms=9000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),ms);
+ return fetch(url,{...options,signal:controller.signal}).finally(()=>clearTimeout(timer));
+}
+
+async function geocodeCity(city){
+ const key=city.trim().toLowerCase();
+ if(cityCoordinates[key])return cityCoordinates[key];
+ try{
+  const u=new URL("https://geocoding-api.open-meteo.com/v1/search");
+  u.searchParams.set("name",city);u.searchParams.set("count","1");
+  u.searchParams.set("language","ru");u.searchParams.set("format","json");
+  const r=await timedFetch(u,{},7000);
+  if(r.ok){const d=await r.json();if(d.results?.length)return {lat:d.results[0].latitude,lon:d.results[0].longitude};}
+ }catch(e){console.warn("Open-Meteo geocoding:",e.message);}
+ try{
+  const u=new URL("https://nominatim.openstreetmap.org/search");
+  u.searchParams.set("q",city);u.searchParams.set("format","jsonv2");u.searchParams.set("limit","1");u.searchParams.set("accept-language","ru");
+  const r=await timedFetch(u,{},8000);
+  if(r.ok){const d=await r.json();if(d.length)return {lat:+d[0].lat,lon:+d[0].lon};}
+ }catch(e){console.warn("Nominatim:",e.message);}
+ throw new Error("Не удалось определить координаты города. Попробуй город из кнопок ниже.");
+}
+
+async function overpassSearch(lat,lon,radius=6000){
+ const q=`[out:json][timeout:15];(nwr["amenity"="cafe"](around:${radius},${lat},${lon});nwr["shop"="coffee"](around:${radius},${lat},${lon});nwr["shop"="coffee_roaster"](around:${radius},${lat},${lon}););out center tags;`;
+ const servers=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"];
+ async function request(server){
+  const r=await timedFetch(server,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:"data="+encodeURIComponent(q)},18000);
+  if(!r.ok)throw new Error("Сервер "+r.status);
+  const d=await r.json();
+  return (d.elements||[]).map(x=>({id:x.type+"-"+x.id,lat:x.lat??x.center?.lat,lon:x.lon??x.center?.lon,tags:x.tags||{}})).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon));
+ }
+ const tasks=servers.map(async server=>{const results=await request(server);if(!results.length)throw new Error("Пустой ответ");return results;});
+ try{return await Promise.any(tasks);}catch{throw new Error("Картографическая база временно недоступна.");}
+}
+
+function mapSearchLinks(city,lat,lon){
+ const q=encodeURIComponent("кофейни "+city),ll=encodeURIComponent(lon+","+lat);
+ return `<div class="empty"><strong>Список кофеен временно недоступен</strong><br>Попробуй открыть реальные места в другой карте:
+ <div class="fallback-links">
+ <a class="fallback-link" href="https://www.google.com/maps/search/${q}/@${encodeURIComponent(lat+","+lon)},13z" target="_blank" rel="noopener">☕ Найти в Google Maps ↗</a>
+ <a class="fallback-link" href="https://yandex.ru/maps/?text=${q}&ll=${ll}&z=13" target="_blank" rel="noopener">📍 Искать в Яндекс Картах ↗</a>
+ <a class="fallback-link" href="https://2gis.ru/search/${q}" target="_blank" rel="noopener">🗺️ Искать в 2ГИС ↗</a>
+ </div></div>`;
+}
+
+function renderPlaces(places){
+ currentPlaces=places;
+ $("#resultsCount").textContent=places.length+" "+plural(places.length);
+ if(!places.length){$("#nearbyResults").innerHTML='<div class="empty"><strong>Кофейни не найдены.</strong><br>Попробуй открыть альтернативные карты.</div>';return;}
+ $("#nearbyResults").innerHTML=places.map((p,i)=>`
+ <article class="place-card" data-index="${i}" tabindex="0">
+ <div class="place-photo"><img src="${photoFor(i)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+ <div class="place-info"><h3>${escapeHtml(cafeName(p))}</h3><p class="place-address">${escapeHtml(address(p))}</p>
+ <div class="place-meta">☕ ${escapeHtml(cafeType(p))}<br>↗ ${p.distance.toFixed(1)} км от центра поиска</div>
+ <span class="place-link">ПОКАЗАТЬ НА КАРТЕ ↗</span></div></article>`).join("");
+ document.querySelectorAll(".place-card").forEach(card=>{
+  const go=()=>focusPlace(+card.dataset.index);
+  card.addEventListener("click",go);
+  card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+ });
+}
+function drawPlaces(places,center){
+ initMap(center[0],center[1],13);if(!map||!markersLayer)return;
+ markersLayer.clearLayers();
+ places.forEach((p,i)=>{
+  p.marker=L.marker([p.lat,p.lon]).addTo(markersLayer);
+  p.marker.bindPopup(`<strong>${escapeHtml(cafeName(p))}</strong><br>${escapeHtml(address(p))}<br>${escapeHtml(cafeType(p))}`);
+  p.marker.on("click",()=>highlight(i));
+ });
+ if(places.length){const bounds=L.latLngBounds(places.map(p=>[p.lat,p.lon]));bounds.extend(center);map.fitBounds(bounds,{padding:[25,25],maxZoom:14});}
+ else map.setView(center,13);
+}
+function highlight(i){document.querySelectorAll(".place-card").forEach(c=>c.classList.toggle("active",+c.dataset.index===i));}
+function focusPlace(i){const p=currentPlaces[i];if(!p)return;highlight(i);if(map){map.flyTo([p.lat,p.lon],17,{duration:.6});setTimeout(()=>p.marker?.openPopup(),350);}}
+
+async function runSearch(lat,lon,label,radius=6000,cityLabel=label){
+ const id=++activeSearch;
+ $("#searchStatus").textContent=`Ищем кофейни: ${label}…`;
+ $("#nearbyResults").innerHTML='<div class="empty"><strong>Ищем интересные места…</strong><br>Пробуем несколько источников данных.</div>';
+ $("#resultsCount").textContent="Поиск…";
+ initMap(lat,lon,13);if(map)map.setView([lat,lon],13);
+ try{
+  const places=await overpassSearch(lat,lon,radius);if(id!==activeSearch)return;
+  places.forEach(p=>p.distance=distanceKm(lat,lon,p.lat,p.lon));
+  places.sort((a,b)=>a.distance-b.distance);
+  const found=places.slice(0,60);renderPlaces(found);drawPlaces(found,[lat,lon]);
+  $("#searchStatus").textContent=`Нашли ${found.length} ${plural(found.length)}. Нажми на карточку, чтобы показать место на карте.`;
+ }catch(e){
+  if(id!==activeSearch)return;
+  currentPlaces=[];
+  $("#searchStatus").textContent="База кофеен не ответила. Попробуй открыть поиск в другой карте.";
+  $("#nearbyResults").innerHTML=mapSearchLinks(cityLabel,lat,lon);
+  $("#resultsCount").textContent="Внешний поиск";
+ }
+}
+
+async function searchCity(city){
+ city=city.trim();if(!city)return;
+ const id=++activeSearch;
+ $("#citySearch").disabled=true;$("#locationSearch").disabled=true;
+ $("#searchStatus").textContent=`Определяем город «${city}»…`;
+ $("#nearbyResults").innerHTML='<div class="empty"><strong>Ищем город на карте…</strong><br>Проверяем координаты.</div>';
+ $("#resultsCount").textContent="Поиск…";
+ try{
+  const loc=await geocodeCity(city);if(id!==activeSearch)return;
+  await runSearch(loc.lat,loc.lon,city,7000,city);
+ }catch(e){
+  if(id!==activeSearch)return;
+  $("#searchStatus").textContent=e.message;
+  const q=encodeURIComponent("кофейни "+city);
+  $("#nearbyResults").innerHTML=`<div class="empty"><strong>Не удалось найти координаты города.</strong><br>Попробуй открыть поиск напрямую:
+  <div class="fallback-links">
+  <a class="fallback-link" href="https://www.google.com/maps/search/${q}" target="_blank" rel="noopener">☕ Google Maps ↗</a>
+  <a class="fallback-link" href="https://yandex.ru/maps/?text=${q}" target="_blank" rel="noopener">📍 Яндекс Карты ↗</a>
+  <a class="fallback-link" href="https://2gis.ru/search/${q}" target="_blank" rel="noopener">🗺️ 2ГИС ↗</a>
+  </div></div>`;
+  $("#resultsCount").textContent="Внешний поиск";
+ }finally{
+  if(id===activeSearch){$("#citySearch").disabled=false;$("#locationSearch").disabled=false;}
+ }
+}
+function searchNearby(){
+ if(!navigator.geolocation){$("#searchStatus").textContent="Браузер не поддерживает геолокацию.";return;}
+ $("#locationSearch").disabled=true;$("#citySearch").disabled=true;
+ $("#searchStatus").textContent="Определяем местоположение. Разреши доступ, если браузер спросит.";
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  try{await runSearch(pos.coords.latitude,pos.coords.longitude,"твоего местоположения",5000,"рядом со мной");}
+  finally{$("#locationSearch").disabled=false;$("#citySearch").disabled=false;}
+ },err=>{
+  $("#searchStatus").textContent=err.code===1?"Доступ к геолокации запрещён. Введи город вручную.":"Не удалось определить местоположение. Введи город вручную.";
+  $("#locationSearch").disabled=false;$("#citySearch").disabled=false;
+ },{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+}
+$("#searchForm").addEventListener("submit",e=>{e.preventDefault();searchCity($("#cityInput").value);});
+$("#locationSearch").addEventListener("click",searchNearby);
+document.querySelectorAll("[data-city]").forEach(b=>b.addEventListener("click",()=>{$("#cityInput").value=b.dataset.city;searchCity(b.dataset.city);}));
+const initial=location.hash.replace("#","");
+if(["overview","nearby","guide"].includes(initial))showPage(initial);
+</script>
+</body>
+</html>
